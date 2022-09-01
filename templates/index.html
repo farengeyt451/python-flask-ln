@@ -1,50 +1,79 @@
-<!DOCTYPE html>
+{% extends "layout.html" %}
 
-<html lang="en">
+{% block body %}
+<div class="header">
+  <h1>Birthdays</h1>
+</div>
+<div class="container">
+  <div class="section">
 
-  <head>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap"
-      rel="stylesheet"
+    <h2>Add a Birthday</h2>
+    <form
+      action="/"
+      method="post"
     >
-    <link
-      href="/static/styles.css"
-      rel="stylesheet"
-    >
-    <title>Birthdays</title>
-  </head>
+      <input
+        type="text"
+        name="name"
+        placeholder="Name"
+        required="true"
+        autocomplete="off"
+      >
+      <input
+        type="text"
+        name="month"
+        placeholder="Month"
+        required="true"
+        autocomplete="off"
+      >
+      <input
+        type="text"
+        name="day"
+        placeholder="Day"
+        required="true"
+        autocomplete="off"
+      >
+      <input
+        type="submit"
+        value="Add birthday"
+      >
+    </form>
+  </div>
 
-  <body>
-    <div class="header">
-      <h1>Birthdays</h1>
-    </div>
-    <div class="container">
-      <div class="section">
-
-        <h2>Add a Birthday</h2>
-        <!-- TODO: Create a form for users to submit a name, a month, and a day -->
-      </div>
-
-      <div class="section">
-        <h2>All Birthdays</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Birthday</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for birthday in birthdays %}
-            <tr>
-              <td>{{ birthday.name }}</td>
-              <td>{{ birthday.month }} / {{ birthday.day }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </body>
-
-</html>
+  <div class="section">
+    <h2>All Birthdays</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Birthday</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for birthday in birthdays %}
+        <tr>
+          <td>{{ birthday.name }}</td>
+          <td>{{ birthday.month }} / {{ birthday.day }}</td>
+          <td>
+            <form
+              action="/delete"
+              method="post"
+            >
+              <input
+                name="id"
+                type="hidden"
+                value="{{ birthday.id }}"
+              >
+              <input
+                type="submit"
+                value="Remove"
+              >
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from crypt import methods
 
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session)
@@ -36,17 +37,44 @@ def after_request(response):
     return response
 
 
+USER_INPUTS = ["name", "month", "day"]
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     conn = get_db_connection()
 
     if request.method == "POST":
+        for input in USER_INPUTS:
+            if not request.form.get(input):
+                return render_template("error.html", message="Missing {}".format(input))
 
-        # TODO: Add the user's entry into the database
+        conn.execute(
+            "INSERT INTO birthdays (name, month, day) VALUES(?, ?, ?);", (
+                request.form.get(USER_INPUTS[0]),
+                request.form.get(USER_INPUTS[1]),
+                request.form.get(USER_INPUTS[2])
+            ))
+
+        conn.commit()
+        conn.close()
 
         return redirect("/")
 
     else:
-        birthdays = conn.execute("SELECT * FROM birthdays").fetchall()
+        birthdays = conn.execute("SELECT * FROM birthdays;").fetchall()
         conn.close()
         return render_template("index.html", birthdays=birthdays)
+
+
+@app.route("/delete", methods=["POST"])
+def delete_peron():
+    conn = get_db_connection()
+
+    id = request.form.get("id")
+    if id:
+        conn.execute("DELETE FROM birthdays WHERE id = ?;", id)
+        conn.commit()
+
+    conn.close()
+    return redirect("/")
