@@ -11,6 +11,8 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
+error_msg = ''
+
 
 def dict_factory(cursor, row):
     """Return dictionary instead of default tuple"""
@@ -45,36 +47,56 @@ def index():
     conn = get_db_connection()
 
     if request.method == "POST":
-        for input in USER_INPUTS:
-            if not request.form.get(input):
-                return render_template("error.html", message="Missing {}".format(input))
+        try:
+            for input in USER_INPUTS:
+                if not request.form.get(input):
+                    return render_template("error.html", message="Missing {}".format(input))
 
-        conn.execute(
-            "INSERT INTO birthdays (name, month, day) VALUES(?, ?, ?);", (
-                request.form.get(USER_INPUTS[0]),
-                request.form.get(USER_INPUTS[1]),
-                request.form.get(USER_INPUTS[2])
-            ))
+            conn.execute(
+                "INSERT INTO birthdays (name, month, day) VALUES(?, ?, ?);", (
+                    request.form.get(USER_INPUTS[0]),
+                    request.form.get(USER_INPUTS[1]),
+                    request.form.get(USER_INPUTS[2])
+                ))
 
-        conn.commit()
-        conn.close()
+            conn.commit()
 
-        return redirect("/")
+        except:
+            conn.rollback()
+            global error_msg
+            error_msg = "Error in INSERT operation"
+
+        finally:
+            conn.close()
+            return redirect("/")
 
     else:
-        birthdays = conn.execute("SELECT * FROM birthdays;").fetchall()
-        conn.close()
-        return render_template("index.html", birthdays=birthdays)
+        try:
+            birthdays = conn.execute("SELECT * FROM birthdays;").fetchall()
+
+        except:
+            error_msg = "Error in SELECT operation"
+
+        finally:
+            conn.close()
+            return render_template("index.html", birthdays=birthdays, error_msg=error_msg)
 
 
 @app.route("/delete", methods=["POST"])
 def delete_peron():
-    conn = get_db_connection()
+    try:
+        conn = get_db_connection()
 
-    id = request.form.get("id")
-    if id:
-        conn.execute("DELETE FROM birthdays WHERE id = ?;", id)
-        conn.commit()
+        id = request.form.get("id")
+        if id:
+            conn.execute("DELETE FROM birthdays WHERE id = ?;", id)
+            conn.commit()
 
-    conn.close()
-    return redirect("/")
+    except:
+        conn.rollback()
+        global error_msg
+        error_msg = "Error in DELETE operation"
+
+    finally:
+        conn.close()
+        return redirect("/")
